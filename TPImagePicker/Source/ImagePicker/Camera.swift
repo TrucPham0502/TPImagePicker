@@ -1,6 +1,5 @@
 //
 //  Camera.swift
-//  BizWork
 //
 //  Created by Truc Pham on 9/16/20.
 //  Copyright © 2020 Quan Pham (VN). All rights reserved.

@@ -1,9 +1,7 @@
+//  AssetGroupCell.swift
 //
-//  FMPhotoPickerImageCollectionViewCell.swift
-//  FMPhotoPicker
-//
-//  Created by c-nguyen on 2018/01/23.
-//  Copyright © 2018 Tribal Media House. All rights reserved.
+//  Created by Truc Pham on 9/15/20.
+//  Copyright © 2020 Quan Pham (VN). All rights reserved.
 //
 
 import UIKit

@@ -1,7 +1,6 @@
 //
 //  Helper.swift
-//  BizWork
-//
+
 //  Created by Truc Pham on 9/15/20.
 //  Copyright © 2020 Quan Pham (VN). All rights reserved.
 //
