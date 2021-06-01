@@ -34,7 +34,7 @@ class ViewController: UIViewController {
         let vc = TPImagePickerViewController()
         vc.maxSelect = 5
         vc.numberOfColumns = 3
-        vc.selectMode = .single
+        vc.selectMode = .multiple
         vc.modalPresentationStyle = .fullScreen
         self.present(vc, animated: true)
     }

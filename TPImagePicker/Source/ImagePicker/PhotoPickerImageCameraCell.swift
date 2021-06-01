@@ -1,8 +1,10 @@
-//  AssetGroupCell.swift
+//
+//  ImagePickerController.swift
 //
 //  Created by Truc Pham on 9/15/20.
-//  Copyright © 2020 Quan Pham (VN). All rights reserved.
+//  Copyright © 2021 Truc Pham (VN). All rights reserved.
 //
+
 
 import Foundation
 import UIKit
@@ -43,7 +45,8 @@ class PhotoPickerImageCameraCell: UICollectionViewCell {
         self.contentView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTap(_:))))
     }
     
-    @objc private func onTap(_ sender : Any?)
+    @objc
+    private func onTap(_ sender : Any?)
     {
         self.onTapSelect()
     }

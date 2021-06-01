@@ -1,9 +1,10 @@
 //
-//  PhotoAsset.swift
+//  ImagePickerController.swift
 //
 //  Created by Truc Pham on 9/15/20.
-//  Copyright © 2020 Quan Pham (VN). All rights reserved.
+//  Copyright © 2021 Truc Pham (VN). All rights reserved.
 //
+
 
 import Foundation
 import UIKit

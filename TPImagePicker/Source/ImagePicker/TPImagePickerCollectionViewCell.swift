@@ -1,8 +1,10 @@
-//  AssetGroupCell.swift
+//
+//  ImagePickerController.swift
 //
 //  Created by Truc Pham on 9/15/20.
-//  Copyright © 2020 Quan Pham (VN). All rights reserved.
+//  Copyright © 2021 Truc Pham (VN). All rights reserved.
 //
+
 
 import UIKit
 import Photos
@@ -167,16 +169,19 @@ class TPImagePickerCollectionViewCell: UICollectionViewCell {
         
         self.performSelectionAnimation(selectedIndex: selectedIndex)
     }
-    @objc func onTapSelects(_ sender: Any) {
+    @objc
+    private func onTapSelects(_ sender: Any) {
         self.onTapSelect()
     }
-    @objc func  onLongSelects(_ sender: Any) {
+    @objc
+    private func  onLongSelects(_ sender: Any) {
         self.onLongSelect()
     }
-    @objc func  onTapImageCheck(_ sender: Any) {
+    @objc
+    private func  onTapImageCheck(_ sender: Any) {
         self.onTapCheck()
     }
-    fileprivate func prepareTypeIcon(image : UIImage?, time : String? = nil){
+    private func prepareTypeIcon(image : UIImage?, time : String? = nil){
         self.infoView.isHidden = time?.isEmpty ?? true
         self.iconType.isHidden = image == nil
         self.iconType.image = image

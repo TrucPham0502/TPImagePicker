@@ -2,7 +2,7 @@
 //  ImagePickerController.swift
 //
 //  Created by Truc Pham on 9/15/20.
-//  Copyright © 2020 Quan Pham (VN). All rights reserved.
+//  Copyright © 2021 Truc Pham (VN). All rights reserved.
 //
 
 import UIKit
@@ -19,7 +19,7 @@ enum SelectMode {
     case single
 }
 
-protocol TPImagePickerViewControllerDelegate: class {
+protocol TPImagePickerViewControllerDelegate: AnyObject {
     func fmPhotoPickerController(_ picker: TPImagePickerViewController, didFinishPickingPhotoWith photos: [UIImage])
 }
 class TPImagePickerViewController : UIViewController {
@@ -44,11 +44,41 @@ class TPImagePickerViewController : UIViewController {
         PHPhotoLibrary.shared().unregisterChangeObserver(self)
     }
     private let headerHeight : CGFloat = 80
-    private weak var imageCollectionView: UICollectionView!
-    private weak var numberOfSelectedPhoto: UILabel!
-    private weak var doneButton: UIButton!
-    private weak var cancelButton: UIButton!
-    private weak var albumTitle: UILabel!
+    private lazy var imageCollectionView: UICollectionView = {
+        let layout = TPImagePickerCollectionViewLayout(numberOfColumns: self.numberOfColumns)
+        layout.sectionInset = UIEdgeInsets(top: collectionViewInset, left: 0, bottom: 75, right: 0)
+        let v = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        v.backgroundColor = .clear
+        v.register(TPImagePickerCollectionViewCell.self, forCellWithReuseIdentifier: TPImagePickerCollectionViewCell.reuseIdentifier)
+        v.register(PhotoPickerImageCameraCell.self, forCellWithReuseIdentifier: PhotoPickerImageCameraCell.reuseIdentifier)
+        v.translatesAutoresizingMaskIntoConstraints = false
+        v.dataSource = self
+        v.delegate = self
+        return v
+    }()
+    private lazy var doneButton: UIButton = {
+        let v = UIButton()
+        v.isHidden = true
+        v.addTarget(self, action: #selector(onTapDone(_:)), for: .touchUpInside)
+        v.translatesAutoresizingMaskIntoConstraints = false
+        return v
+    }()
+    private lazy var cancelButton: UIButton = {
+        let v = UIButton()
+        v.addTarget(self, action: #selector(onTapCancel(_:)), for: .touchUpInside)
+        v.translatesAutoresizingMaskIntoConstraints = false
+        v.setImage(Config.image.ic_Back_White, for: .normal)
+        return v
+    }()
+    private lazy var albumTitle: UILabel = {
+        let v = UILabel()
+        v.text = "Album"
+        v.textColor = .white
+        v.translatesAutoresizingMaskIntoConstraints = false
+        v.isUserInteractionEnabled = true
+        v.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapAlbum(_:))))
+        return v
+    }()
     private lazy var headerView : UIView = {
         let v = UIView()
         v.backgroundColor = UIColor.fromGradientWithDirection(.topToBottom, frame: .init(x: 0, y: 0, width: UIScreen.main.bounds.width, height: headerHeight), colors: [UIColor(red: 0, green: 0, blue: 0, alpha: 0.8),UIColor(red: 0, green: 0, blue: 0, alpha: 0.3)])
@@ -57,7 +87,7 @@ class TPImagePickerViewController : UIViewController {
         return v
     }()
     private lazy var imageAlbum : UIButton = {
-        let v = UIButton()
+        let v = UIButton(type: .system)
         v.setImage(Config.image.ic_down_white, for: .normal)
         v.translatesAutoresizingMaskIntoConstraints = false
         return v
@@ -106,16 +136,8 @@ class TPImagePickerViewController : UIViewController {
         view = UIView()
         view.backgroundColor = .white
         initializeViews()
-        setupView()
     }
-    private func setupView() {
-        self.imageCollectionView.register(TPImagePickerCollectionViewCell.self, forCellWithReuseIdentifier: TPImagePickerCollectionViewCell.reuseIdentifier)
-        self.imageCollectionView.register(PhotoPickerImageCameraCell.self, forCellWithReuseIdentifier: PhotoPickerImageCameraCell.reuseIdentifier)
-        self.imageCollectionView.dataSource = self
-        self.imageCollectionView.delegate = self
-        self.doneButton.isHidden = true
-        self.cancelButton.setImage(Config.image.ic_Back_White, for: .normal)
-    }
+
     
     @objc
     private func onTapCancel(_ sender: Any) {
@@ -289,22 +311,9 @@ extension TPImagePickerViewController: UICollectionViewDataSource {
     
     private func tryToAddPhotoToSelectedList(photoIndex index: Int) {
         if self.selectMode == .multiple {
-            guard let fmMediaType = self.dataSource.mediaTypeForPhoto(atIndex: index) else { return }
-            
             var canBeAdded = true
-            
-            switch fmMediaType {
-            case .image:
-                if self.dataSource.countSelectedPhoto(byType: .image) >= self.maxSelect {
-                    canBeAdded = false
-                }
-            case .video:
-                if self.dataSource.countSelectedPhoto(byType: .video) >= self.maxSelect {
-                    canBeAdded = false
-                    
-                }
-            case .unsupported:
-                break
+            if self.dataSource.numberOfSelectedPhoto() >= self.maxSelect {
+                canBeAdded = false
             }
             
             if canBeAdded {
@@ -351,16 +360,16 @@ extension TPImagePickerViewController: UICollectionViewDelegate {
         })
     }
     func collectionView(_ collectionView: UICollectionView, willPerformPreviewActionForMenuWith configuration: UIContextMenuConfiguration, animator: UIContextMenuInteractionCommitAnimating) {
-//        guard
-//            let identifier = configuration.identifier as? String,
-//            let index = Int(identifier)
-//        else {
-//            return
-//        }
-//        let cell = imageCollectionView.cellForItem(at: IndexPath(row: index, section: 0))
-//        animator.addAnimations {
-//            self.show(self.createPreviewImage(index - self.additionIndex), sender: cell)
-//        }
+        //        guard
+        //            let identifier = configuration.identifier as? String,
+        //            let index = Int(identifier)
+        //        else {
+        //            return
+        //        }
+        //        let cell = imageCollectionView.cellForItem(at: IndexPath(row: index, section: 0))
+        //        animator.addAnimations {
+        //            self.show(self.createPreviewImage(index - self.additionIndex), sender: cell)
+        //        }
     }
 }
 
@@ -372,91 +381,47 @@ extension TPImagePickerViewController: UIViewControllerTransitioningDelegate {
 private extension TPImagePickerViewController {
     func initializeViews() {
         self.view.backgroundColor = .black
+        let menuContainer = UIView()
+        menuContainer.translatesAutoresizingMaskIntoConstraints = false
+       
+        [imageCollectionView,headerView,doneButton,imageAlbum,menuContainer].forEach({self.view.addSubview($0)})
         
-        let layout = TPImagePickerCollectionViewLayout(numberOfColumns: self.numberOfColumns)
-        layout.sectionInset = UIEdgeInsets(top: collectionViewInset, left: 0, bottom: 75, right: 0)
-        let imageCollectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        self.imageCollectionView = imageCollectionView
-        imageCollectionView.backgroundColor = .clear
+        [cancelButton,albumTitle].forEach({menuContainer.addSubview($0)})
         
-        imageCollectionView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(imageCollectionView)
         NSLayoutConstraint.activate([
             imageCollectionView.topAnchor.constraint(equalTo: self.view.topAnchor),
             imageCollectionView.rightAnchor.constraint(equalTo: view.rightAnchor),
             imageCollectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             imageCollectionView.leftAnchor.constraint(equalTo: view.leftAnchor),
-        ])
-        
-        view.addSubview(headerView)
-        NSLayoutConstraint.activate([
+            
+            ///
             headerView.topAnchor.constraint(equalTo: view.topAnchor),
             headerView.leftAnchor.constraint(equalTo: view.leftAnchor),
             headerView.rightAnchor.constraint(equalTo: view.rightAnchor),
-            headerView.heightAnchor.constraint(equalToConstant: headerHeight)
-        ])
-        
-        
-        let menuContainer = UIView()
-        
-        menuContainer.translatesAutoresizingMaskIntoConstraints = false
-        headerView.addSubview(menuContainer)
-        if #available(iOS 11.0, *) {
-            NSLayoutConstraint.activate([
-                menuContainer.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            ])
-        } else {
-            NSLayoutConstraint.activate([
-                menuContainer.topAnchor.constraint(equalTo: headerView.topAnchor, constant: 20),
-            ])
-        }
-        NSLayoutConstraint.activate([
+            headerView.heightAnchor.constraint(equalToConstant: headerHeight),
+            
+            ///
             menuContainer.leftAnchor.constraint(equalTo: headerView.leftAnchor),
             menuContainer.rightAnchor.constraint(equalTo: headerView.rightAnchor),
             menuContainer.bottomAnchor.constraint(equalTo: headerView.bottomAnchor),
-            menuContainer.heightAnchor.constraint(equalToConstant: 44)
-        ])
-        
-        let cancelButton = UIButton()
-        self.cancelButton = cancelButton
-        cancelButton.addTarget(self, action: #selector(onTapCancel(_:)), for: .touchUpInside)
-        
-        cancelButton.translatesAutoresizingMaskIntoConstraints = false
-        menuContainer.addSubview(cancelButton)
-        NSLayoutConstraint.activate([
+            menuContainer.heightAnchor.constraint(equalToConstant: 44),
+            menuContainer.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            
+            
+            ///
             cancelButton.leftAnchor.constraint(equalTo: menuContainer.leftAnchor, constant: 16),
             cancelButton.centerYAnchor.constraint(equalTo: menuContainer.centerYAnchor),
-        ])
-        
-        
-        
-        let albumTitle = UILabel()
-        self.albumTitle = albumTitle
-        albumTitle.text = "Album"
-        albumTitle.textColor = .white
-        albumTitle.translatesAutoresizingMaskIntoConstraints = false
-        menuContainer.addSubview(self.albumTitle)
-        albumTitle.isUserInteractionEnabled = true
-        albumTitle.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapAlbum(_:))))
-        NSLayoutConstraint.activate([
+            
+            ///
             albumTitle.centerXAnchor.constraint(equalTo: menuContainer.centerXAnchor),
-            albumTitle.centerYAnchor.constraint(equalTo: menuContainer.centerYAnchor)
-        ])
-        
-        self.view.addSubview(imageAlbum)
-        NSLayoutConstraint.activate([
+            albumTitle.centerYAnchor.constraint(equalTo: menuContainer.centerYAnchor),
+            
+            ///
             imageAlbum.leadingAnchor.constraint(equalTo: albumTitle.trailingAnchor, constant: 15),
-            imageAlbum.centerYAnchor.constraint(equalTo: menuContainer.centerYAnchor)
-        ])
-        
-        
-        let doneButton = UIButton(type: .system)
-        self.doneButton = doneButton
-        doneButton.addTarget(self, action: #selector(onTapDone(_:)), for: .touchUpInside)
-        
-        doneButton.translatesAutoresizingMaskIntoConstraints = false
-        self.view.addSubview(doneButton)
-        NSLayoutConstraint.activate([
+            imageAlbum.centerYAnchor.constraint(equalTo: menuContainer.centerYAnchor),
+            
+            
+            ///
             doneButton.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
             doneButton.bottomAnchor.constraint(equalTo: self.view.bottomAnchor,constant: -25),
             doneButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 300),
