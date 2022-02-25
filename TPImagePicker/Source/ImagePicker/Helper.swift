@@ -18,13 +18,13 @@ class Helper: NSObject {
         .smartAlbumFavorites,
         .albumRegular
     ]
-    static func generateVideoFrames(from phAsset: PHAsset, numberOfFrames: Int = 9, completion: @escaping ([CGImage]) -> Void) {
+    static func generateVideoFrames(from phAsset: PHAsset, numberOfFrames: Int = 9, progress: @escaping (Double?, Bool?, Error?) -> Void, completion: @escaping ([CGImage]) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             let multiTask = DispatchGroup()
             var asset: AVAsset?
             
             multiTask.enter()
-            Helper.requestAVAsset(asset: phAsset, complete: { avAsset in
+            Helper.requestAVAsset(asset: phAsset, progress: progress, complete: { avAsset in
                 asset = avAsset
                 multiTask.leave()
             })
@@ -89,10 +89,14 @@ class Helper: NSObject {
         return fetchOptions
     }
     
-    static func requestAVAsset(asset: PHAsset, complete: @escaping (AVAsset?) -> Void) {
+    static func requestAVAsset(asset: PHAsset, progress: @escaping (Double?, Bool?, Error?) -> Void, complete: @escaping (AVAsset?) -> Void) {
         guard asset.mediaType == .video else { return complete(nil) }
-        
-        PHImageManager().requestAVAsset(forVideo: asset, options: nil) { (asset, _, _) in
+        let options = PHVideoRequestOptions()
+        options.isNetworkAccessAllowed = true
+        options.progressHandler = {pro, error, stop, info  in
+            progress(pro, stop.pointee.boolValue, error)
+        }
+        PHImageManager().requestAVAsset(forVideo: asset, options: options) { (asset, _, _) in
             DispatchQueue.main.async {
                 complete(asset)
             }
@@ -153,14 +157,16 @@ class Helper: NSObject {
         return path
     }
     
-    static func getFullSizePhoto(by asset: PHAsset, complete: @escaping (UIImage?) -> Void) -> PHImageRequestID {
+    static func getFullSizePhoto(by asset: PHAsset, progress: @escaping (Double?, Bool?, Error?) -> Void, complete: @escaping (UIImage?) -> Void) -> PHImageRequestID {
         let manager = PHImageManager.default()
         let options = PHImageRequestOptions()
         options.deliveryMode = .opportunistic
         options.resizeMode = .fast
         options.isSynchronous = false
         options.isNetworkAccessAllowed = true
-        
+        options.progressHandler = {(pro, error, stop, info)  in
+            progress(pro, stop.pointee.boolValue, error)
+        }
         let pId = manager.requestImageData(for: asset, options: options) { data, _, _, info in
             guard let data = data,
                 let image = UIImage(data: data)
@@ -173,13 +179,15 @@ class Helper: NSObject {
         return pId
     }
     
-    static func getPhoto(by photoAsset: PHAsset, in desireSize: CGSize, complete: @escaping (UIImage?) -> Void) -> PHImageRequestID {
+    static func getPhoto(by photoAsset: PHAsset, in desireSize: CGSize, progress: @escaping (Double?, Bool?, Error?) -> Void, complete: @escaping (UIImage?) -> Void) -> PHImageRequestID {
         let options = PHImageRequestOptions()
         options.deliveryMode = .highQualityFormat
         options.resizeMode = .fast
         options.isSynchronous = false
         options.isNetworkAccessAllowed = true
-        
+        options.progressHandler = {(pro, error, stop, info)  in
+            progress(pro, stop.pointee.boolValue, error)
+        }
         let manager = PHImageManager.default()
         let newSize = CGSize(width: desireSize.width,
                              height: desireSize.height)

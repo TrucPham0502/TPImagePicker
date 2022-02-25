@@ -146,8 +146,11 @@ class TPImagePickerCollectionViewCell: UICollectionViewCell {
         self.photoAsset = photoAsset
         let cellSize = UIScreen.main.bounds.width / 3
         let size = CGSize(width: cellSize + 300, height: cellSize + 300)
-        photoAsset.requestThumb(refresh: false, size: size) { image in
-            self.imageView.image = image
+        photoAsset.requestThumb(refresh: false, size: size) { progress, stop, error in
+            print(progress)
+        } _: {[weak self] image in
+            guard let _self = self else { return }
+            _self.imageView.image = image
         }
         
         photoAsset.thumbChanged = { [weak self, weak photoAsset] image in

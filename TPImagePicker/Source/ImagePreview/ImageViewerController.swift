@@ -146,7 +146,9 @@ class ImageViewerController:UIViewController, UIGestureRecognizerDelegate {
                             self.imageView.addSubview(photoView)
                         }
                     default:
-                        asset.requestFullSizePhoto(complete: {[weak self] (image) in
+                        asset.requestFullSizePhoto(progress: { pro, stop, error in
+                            print(pro)  
+                        }, complete: {[weak self] (image) in
                             self?.imageView.image = image
                         })
                     }

@@ -148,8 +148,11 @@ class PhotoAsset {
         }
         else {
             if let asset = asset {
-                Helper.requestAVAsset(asset: asset) {[weak self] (asset) in
-                    self?.avasset = asset
+                Helper.requestAVAsset(asset: asset) { progress, stop, err in
+                    print(progress)
+                } complete: {[weak self] (asset) in
+                    guard let _self = self else { return }
+                    _self.avasset = asset
                     complete(asset)
                 }
             }
@@ -173,30 +176,32 @@ class PhotoAsset {
         
     }
     
-    func requestVideoFrames(_ complete: @escaping ([CGImage]) -> Void) {
+    func requestVideoFrames(progress: @escaping (Double?, Bool?, Error?) -> Void, complete: @escaping ([CGImage]) -> Void) {
         if let videoFrames = self.videoFrames {
             complete(videoFrames)
         } else {
             if let asset = asset {
-                Helper.generateVideoFrames(from: asset) {[weak self] cgImages in
-                    self?.videoFrames = cgImages
+                Helper.generateVideoFrames(from: asset, progress: progress, completion: {[weak self] cgImages in
+                    guard let _self = self else { return }
+                    _self.videoFrames = cgImages
                     complete(cgImages)
-                }
+                })
             } else {
                 complete([])
             }
         }
     }
     
-    func requestThumb(refresh: Bool=false,size : CGSize, _ complete: @escaping (UIImage?) -> Void) {
+    func requestThumb(refresh: Bool=false,size : CGSize, progress: @escaping (Double?, Bool?, Error?) -> Void, _ complete: @escaping (UIImage?) -> Void) {
         if let editedThumb = self.editedThumb, !refresh {
             complete(editedThumb)
         } else {
             if let asset = asset {
-                self.thumbRequestId = Helper.getPhoto(by: asset, in: size) {[weak self] image in
-                    self?.editedThumb = image
+                self.thumbRequestId = Helper.getPhoto(by: asset, in: size, progress: progress, complete: {[weak self] image in
+                    guard let _self = self else { return }
+                    _self.editedThumb = image
                     complete(image)
-                }
+                })
             }
         }
     }
@@ -214,9 +219,9 @@ class PhotoAsset {
         }
         
     }
-    func requestFullSizePhoto(complete: @escaping (UIImage?) -> Void) {
+    func requestFullSizePhoto(progress: @escaping (Double?, Bool?, Error?) -> Void, complete: @escaping (UIImage?) -> Void) {
         if let asset = asset {
-            self.fullSizePhotoRequestId = Helper.getPhoto(by: asset, in: CGSize(width: 2000, height: 2000)){[weak self] image in
+            self.fullSizePhotoRequestId = Helper.getPhoto(by: asset, in: CGSize(width: 2000, height: 2000), progress: progress, complete: {[weak self] image in
                 guard let _self = self else {return}
                 _self.fullSizePhotoRequestId = nil
                 if _self.canceledFullSizeRequest {
@@ -226,7 +231,7 @@ class PhotoAsset {
                     guard let image = image else { return complete(nil) }
                     complete(image)
                 }
-            }
+            })
         }
     }
     

@@ -61,9 +61,12 @@ class TPImagePickerGroupViewCell: UITableViewCell {
         if assetGroup.totalCount == 0 {
             thumbnailImageView.image = UIImage()
         } else {
-            assetGroup.fetchGroupThumbnail(size: CGSize(width:  TPImagePickerGroupViewCell.preferredHeight, height: TPImagePickerGroupViewCell.preferredHeight), completeBlock: { (image) in
-                if self.tag == tag {
-                    self.thumbnailImageView.image = image
+            assetGroup.fetchGroupThumbnail(size: CGSize(width:  TPImagePickerGroupViewCell.preferredHeight, height: TPImagePickerGroupViewCell.preferredHeight), progress: { pro, stop, error in
+                print(pro)
+            }, completeBlock: {[weak self] (image) in
+                guard let _self = self else { return }
+                if _self.tag == tag {
+                    _self.thumbnailImageView.image = image
                 }
             })
         }

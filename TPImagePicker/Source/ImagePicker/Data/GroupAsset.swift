@@ -57,7 +57,7 @@ public class GroupAsset {
         self.displayCount = 0
     }
     
-    func fetchGroupThumbnail(size: CGSize,
+    func fetchGroupThumbnail(size: CGSize,progress: @escaping (Double?, Bool?, Error?) -> Void,
                              completeBlock: @escaping (_ image: UIImage?) -> Void)
     {
         if self.totalCount == 0 {
@@ -69,10 +69,10 @@ public class GroupAsset {
             completeBlock(nil)
             return
         }
-        _ = Helper.getPhoto(by: lastResult, in: size) { image in
+        _ = Helper.getPhoto(by: lastResult, in: size, progress: progress, complete:  { image in
             completeBlock(image)
             return
-        }
+        })
     }
     
 }

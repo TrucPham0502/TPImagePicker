@@ -222,11 +222,13 @@ class TPImagePickerViewController : UIViewController {
             let multiTask = DispatchGroup()
             for (index, element) in self.dataSource.getSelectedPhotos().enumerated() {
                 multiTask.enter()
-                element.requestFullSizePhoto(){
+                element.requestFullSizePhoto(progress: { pro, stop, error in
+                    print("\(index): \(pro)")
+                }, complete: {
                     guard let image = $0 else { return }
                     dict[index] = image
                     multiTask.leave()
-                }
+                })
             }
             multiTask.wait()
             
