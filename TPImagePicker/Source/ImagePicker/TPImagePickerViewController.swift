@@ -44,8 +44,12 @@ class TPImagePickerViewController : UIViewController {
         PHPhotoLibrary.shared().unregisterChangeObserver(self)
     }
     private let headerHeight : CGFloat = 80
+    let layout = PinterestLayout()
     private lazy var imageCollectionView: UICollectionView = {
-        let layout = TPImagePickerCollectionViewLayout(numberOfColumns: self.numberOfColumns)
+        layout.columnsCount = 3
+        layout.delegate = self
+//        layout.contentPadding = PinterestLayout.Padding(horizontal: 5, vertical: 5)
+        layout.cellsPadding = PinterestLayout.Padding(horizontal: 3, vertical: 3)
         layout.sectionInset = UIEdgeInsets(top: collectionViewInset, left: 0, bottom: 75, right: 0)
         let v = UICollectionView(frame: .zero, collectionViewLayout: layout)
         v.backgroundColor = .clear
@@ -655,4 +659,13 @@ extension TPImagePickerViewController : UIContextMenuInteractionDelegate {
     
     
     
+}
+extension TPImagePickerViewController : PinterestLayoutDelegate {
+    func cellSize(indexPath: IndexPath) -> CGSize {
+        guard let photoAsset = self.dataSource.photo(atIndex: indexPath.item - additionIndex) else { return .zero }
+        guard let width = photoAsset.asset?.pixelWidth, let height = photoAsset.asset?.pixelHeight else { return .zero }
+        let cellWidth = layout.width
+        let size = CGSize(width: Int(cellWidth), height: Int(CGFloat((height/width)) * cellWidth))
+        return size
+    }
 }
